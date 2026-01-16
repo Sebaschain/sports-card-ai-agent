@@ -7,7 +7,6 @@ import asyncio
 from datetime import datetime, timedelta
 import pandas as pd
 import plotly.graph_objects as go
-import time
 
 from src.agents.price_analyzer_agent import PriceAnalyzerAgent
 from src.tools.ebay_tool import EBayTool, EBaySearchParams
@@ -422,7 +421,6 @@ def main():
                                 name=player_name_port,
                                 sport=sport_port
                             )
-                            print(f"DEBUG: Player created - {player.name}")
                             
                             # Get or create card
                             card_id = f"{player_id}-{year_port}-{manufacturer_port.lower()}"
@@ -433,10 +431,9 @@ def main():
                                 year=year_port,
                                 manufacturer=manufacturer_port
                             )
-                            print(f"DEBUG: Card created - {card.card_id}")
                             
                             # Add to portfolio
-                            portfolio_item = CardRepository.add_to_portfolio(
+                            CardRepository.add_to_portfolio(
                                 db=db,
                                 card=card,
                                 purchase_price=purchase_price,
@@ -444,30 +441,15 @@ def main():
                                 quantity=quantity,
                                 notes=notes
                             )
-                            print(f"DEBUG: Portfolio item created - ID {portfolio_item.id}")
-                            
-                            # Commit explicitly
-                            db.commit()
-                            print(f"DEBUG: Transaction committed")
                             
                             st.success(f"✅ {player_name_port} añadido al portfolio!")
-                            st.cache_data.clear()
-                            time.sleep(0.5)
                             st.rerun()
                 
                 except Exception as e:
-                    st.error(f"❌ Error al añadir: {str(e)}")
-                    print(f"ERROR COMPLETO:")
-                    import traceback
-                    traceback.print_exc()
+                    st.error(f"❌ Error: {str(e)}")
         
         with col_portfolio:
-            col_title, col_refresh = st.columns([3, 1])
-            with col_title:
-                st.subheader("📊 Tu Portfolio")
-            with col_refresh:
-                if st.button("🔄 Actualizar", key="refresh_portfolio"):
-                    st.rerun()
+            st.subheader("📊 Tu Portfolio")
             
             try:
                 from src.utils.database import get_db
@@ -510,10 +492,6 @@ def main():
                             delta_color=delta_color,
                             help="Ganancia o pérdida total"
                         )
-
-                    refresh_key = st.empty()
-                    with refresh_key:
-                        st.write(f"Última actualización: {datetime.now().strftime('%H:%M:%S')}")
                     
                     # Get portfolio items
                     portfolio_items = CardRepository.get_portfolio(db, active_only=True)
@@ -731,9 +709,9 @@ def main():
                 st.code(traceback.format_exc())
     
     # ============================================================
-    # TAB 5: Dashboard
+    # TAB : Dashboard
     # ============================================================
-    with tab5:
+    with tab4:
         st.header("📈 Dashboard de Mercado")
         st.info("🚧 Próximamente: Estadísticas del mercado, comparaciones, y más")
         

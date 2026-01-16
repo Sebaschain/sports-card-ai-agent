@@ -5,6 +5,7 @@ from datetime import datetime
 from src.agents.market_research_agent import MarketResearchAgent
 from src.agents.player_analysis_agent import PlayerAnalysisAgent
 from src.agents.trading_strategy_agent import TradingStrategyAgent
+from src.utils.db_helper import save_analysis_to_db
 
 
 class SupervisorAgent:
@@ -67,7 +68,7 @@ class SupervisorAgent:
         
         strategy = trading_strategy["strategy"]
         
-        return {
+        result = {
             "supervisor": self.name,
             "timestamp": datetime.now().isoformat(),
             "card": card_info,
@@ -85,3 +86,15 @@ class SupervisorAgent:
             "reasoning": strategy["reasoning"],
             "action_items": strategy["action_items"]
         }
+        
+        # Guardar en base de datos
+        save_analysis_to_db(
+            player_name=player_name,
+            year=year,
+            manufacturer=manufacturer,
+            sport=sport,
+            analysis_result=result,
+            analysis_type="multi_agent"
+        )
+        
+        return result

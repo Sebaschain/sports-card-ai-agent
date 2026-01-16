@@ -9,6 +9,8 @@ dist/
 *.egg-info/
 .installed.cfg
 *.egg
+*.pyc
+.venv/
 
 # UV
 .uv/
@@ -57,3 +59,11 @@ Thumbs.db
 
 # Ruff
 .ruff_cache/
+
+# Database
+*.db
+*.sqlite
+data/
+
+# Streamlit
+.streamlit/secrets.toml

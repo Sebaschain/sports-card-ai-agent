@@ -13,7 +13,8 @@ from src.mcp.tools import (
     search_sports_cards,
     analyze_card_investment,
     get_player_card_recommendations,
-    compare_card_prices
+    compare_card_prices,
+    multi_agent_analysis
 )
 
 
@@ -24,7 +25,7 @@ app = Server("sports-card-ai-agent")
 @app.list_tools()
 async def list_tools() -> list[Tool]:
     """Lista todas las herramientas disponibles"""
-    return [
+    return  [
         Tool(
             name="search_sports_cards",
             description=(
@@ -136,6 +137,44 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["player_name", "year"]
             }
+        ),
+        Tool(
+            name="multi_agent_analysis",
+            description=(
+                "🤖 ADVANCED: Executes a complete multi-agent analysis system. "
+                "Coordinates three specialized AI agents: "
+                "1) Market Research Agent - analyzes eBay prices and market trends "
+                "2) Player Analysis Agent - evaluates player performance and outlook "
+                "3) Trading Strategy Agent - generates buy/sell recommendations. "
+                "This provides the most comprehensive investment analysis available."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "player_name": {
+                        "type": "string",
+                        "description": "Full player name (e.g., 'Connor McDavid', 'LeBron James')"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Card year (e.g., 2003, 2015)",
+                        "minimum": 1900,
+                        "maximum": 2025
+                    },
+                    "manufacturer": {
+                        "type": "string",
+                        "description": "Card manufacturer (e.g., 'Topps', 'Panini', 'Upper Deck')",
+                        "default": "Topps"
+                    },
+                    "sport": {
+                        "type": "string",
+                        "enum": ["NBA", "NHL", "MLB"],
+                        "description": "Sport league",
+                        "default": "NBA"
+                    }
+                },
+                "required": ["player_name", "year"]
+            }
         )
     ]
 
@@ -148,7 +187,8 @@ async def call_tool(name: str, arguments: Any) -> Sequence[TextContent]:
             "search_sports_cards": search_sports_cards,
             "analyze_card_investment": analyze_card_investment,
             "get_player_card_recommendations": get_player_card_recommendations,
-            "compare_card_prices": compare_card_prices
+            "compare_card_prices": compare_card_prices,
+            "multi_agent_analysis": multi_agent_analysis
         }
         
         if name not in tool_map:

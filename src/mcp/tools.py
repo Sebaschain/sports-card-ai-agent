@@ -237,9 +237,81 @@ async def compare_card_prices(
             },
             "price_difference_pct": round(((avg_active - avg_sold) / avg_sold * 100), 1) if avg_sold > 0 else 0
         }
-    
+
     except Exception as e:
         return {
             "success": False,
             "error": str(e)
         }
+        
+async def multi_agent_analysis(
+    player_name: str,
+    year: int,
+    manufacturer: str = "Topps",
+    sport: str = "NBA"
+) -> Dict[str, Any]:
+    """
+    Ejecuta análisis completo con sistema multi-agente
+    Coordina Market Research, Player Analysis y Trading Strategy
+    
+    Args:
+        player_name: Nombre del jugador (ej: "Connor McDavid")
+        year: Año de la tarjeta (ej: 2015)
+        manufacturer: Fabricante (default: "Topps")
+        sport: Deporte - "NBA", "NHL" o "MLB" (default: "NBA")
+        
+    Returns:
+        Análisis completo coordinado por el Supervisor Agent
+    """
+    try:
+        from src.agents.supervisor_agent import SupervisorAgent
+        
+        supervisor = SupervisorAgent()
+        
+        result = await supervisor.analyze_investment_opportunity(
+            player_name=player_name,
+            year=year,
+            manufacturer=manufacturer,
+            sport=sport,
+            budget=5000.0
+        )
+        
+        return {
+            "success": True,
+            "analysis_type": "multi_agent_coordinated",
+            "agents_involved": [
+                "Market Research Agent",
+                "Player Analysis Agent", 
+                "Trading Strategy Agent"
+            ],
+            "card": result["card"],
+            "recommendation": {
+                "signal": result["recommendation"]["signal"],
+                "confidence": f"{result['recommendation']['confidence']:.0%}",
+                "current_price": result["recommendation"]["price_targets"]["entry_price"],
+                "target_sell": result["recommendation"]["price_targets"]["target_sell_price"],
+                "stop_loss": result["recommendation"]["price_targets"]["stop_loss"]
+            },
+            "market_analysis": {
+                "sold_items_count": result["detailed_analysis"]["market"]["market_analysis"]["sold_items"]["count"],
+                "average_price": result["detailed_analysis"]["market"]["market_analysis"]["sold_items"]["average_price"],
+                "liquidity": result["detailed_analysis"]["market"]["market_analysis"]["liquidity"]
+            },
+            "player_analysis": {
+                "performance_score": result["detailed_analysis"]["player"]["analysis"]["performance_score"]["overall_score"],
+                "rating": result["detailed_analysis"]["player"]["analysis"]["performance_score"]["rating"],
+                "trend": result["detailed_analysis"]["player"]["analysis"]["performance_score"]["trend"],
+                "outlook": result["detailed_analysis"]["player"]["analysis"]["future_outlook"]
+            },
+            "reasoning": result["reasoning"],
+            "action_items": result["action_items"]
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Error executing multi-agent analysis"
+        }
+    
+    
