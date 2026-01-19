@@ -12,3 +12,7 @@ sqlalchemy>=2.0.0
 nba-api>=1.1.14
 nhl-api-py>=1.0.0
 MLB-StatsAPI>=1.7.0
+nba-api>=1.1.14
+mlb-statsapi>=1.7.0
+beautifulsoup4>=4.12.0
+requests>=2.31.0
