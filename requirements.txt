@@ -9,3 +9,6 @@ httpx>=0.27.0
 pandas>=2.2.0
 plotly>=5.18.0
 sqlalchemy>=2.0.0
+nba-api>=1.1.14
+nhl-api>=0.1.0
+mlb-statsapi>=1.7.0
