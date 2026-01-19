@@ -96,6 +96,13 @@ def create_price_chart(prices: list, title: str = "Historial de Precios"):
 
 def main():
     """Función principal de la aplicación"""
+
+    # Initialize database on first run
+    try:
+        from src.utils.database import init_db
+        init_db()
+    except Exception as e:
+        pass  # Si ya existe, continuar
     
     # Header
     st.markdown('<h1 class="main-header">🏀 Sports Card AI Agent</h1>', unsafe_allow_html=True)
