@@ -65,7 +65,7 @@ class EBayTool:
     async def search_cards(self, params: EBaySearchParams) -> List[EBayListing]:
         """Busca tarjetas en eBay"""
         if not self.app_id:
-            print("\n⚠️  eBay App ID no configurado")
+            print("\n[WARN] eBay App ID no configurado")
             print("Para usar esta función necesitas:")
             print("1. Ir a https://developer.ebay.com/")
             print("2. Crear una cuenta gratuita")
@@ -109,10 +109,10 @@ class EBayTool:
                 return self._parse_response(data, params.sold_items_only)
         
         except httpx.HTTPError as e:
-            print(f"❌ Error al buscar en eBay: {e}")
+            print(f"[ERROR] Error al buscar en eBay: {e}")
             return []
         except Exception as e:
-            print(f"❌ Error inesperado: {e}")
+            print(f"[ERROR] Error inesperado: {e}")
             return []
     
     def _parse_response(self, data: Dict[str, Any], sold_items: bool) -> List[EBayListing]:
@@ -171,7 +171,7 @@ class EBayTool:
                     continue
         
         except Exception as e:
-            print(f"❌ Error parseando respuesta de eBay: {e}")
+            print(f"[ERROR] Error parseando respuesta de eBay: {e}")
         
         return listings
     
@@ -235,7 +235,7 @@ async def search_ebay_cards(
         result += f"{i}. {listing.title}\n"
         result += f"   Precio: ${listing.price:.2f} {listing.currency}\n"
         result += f"   Condición: {listing.condition}\n"
-        result += f"   {'✅ VENDIDO' if listing.sold else '🔵 A LA VENTA'}\n"
+        result += f"   {'VENDIDO' if listing.sold else 'A LA VENTA'}\n"
         result += f"   URL: {listing.listing_url}\n\n"
     
     return result
