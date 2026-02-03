@@ -13,6 +13,14 @@ import streamlit_authenticator as stauth
 
 from src.utils.auth_utils import hash_password
 
+# Setup logging and configuration
+from src.utils.logging_config import setup_logging, get_logger
+from src.utils.config import validate_configuration
+
+# Initialize logging
+setup_logging()
+logger = get_logger(__name__)
+
 from src.agents.price_analyzer_agent import PriceAnalyzerAgent
 
 # from src.agents.supervisor_agent import SupervisorAgent # Moved inside getter to avoid ImportError

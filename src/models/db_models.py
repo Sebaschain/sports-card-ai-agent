@@ -138,8 +138,8 @@ class PortfolioItemDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
-        Integer, ForeignKey("users.id"), nullable=True
-    )  # Temporarily nullable for migration
+        Integer, ForeignKey("users.id"), nullable=False
+    )  # User ID - required field
     card_id = Column(Integer, ForeignKey("cards.id"), nullable=False)
     purchase_price = Column(Float, nullable=False)
     purchase_date = Column(DateTime, nullable=False)
@@ -162,8 +162,8 @@ class WatchlistDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
-        Integer, ForeignKey("users.id"), nullable=True
-    )  # Temporarily nullable
+        Integer, ForeignKey("users.id"), nullable=False
+    )  # User ID - required field
     card_id = Column(Integer, ForeignKey("cards.id"), nullable=False)
     target_buy_price = Column(Float)
     alert_enabled = Column(Boolean, default=True)
