@@ -1,0 +1,14 @@
+2026-01-26 14:20:40.801 
+Warning: the config option 'server.enableCORS=false' is not compatible with
+'server.enableXsrfProtection=true'.
+As a result, 'server.enableCORS' is being overridden to 'true'.
+
+More information:
+In order to protect against CSRF attacks, we send a cookie with each request.
+To do so, we must specify allowable origins, which places a restriction on
+cross-origin resource sharing.
+
+If cross origin resource sharing is required, please disable server.enableXsrfProtection.
+            
+DEBUG: pg_url is 'sqlite:///./data/sports_cards.db'
+DATABASE_URL in .env is still pointing to SQLite.

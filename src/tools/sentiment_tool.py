@@ -3,10 +3,12 @@ import asyncio
 from src.tools.base_tool import BaseTool
 
 try:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    from textblob import TextBlob
+
     HAS_DEPENDENCIES = True
 except ImportError:
     HAS_DEPENDENCIES = False
-    # No imprimir aquí para evitar problemas de encoding en Windows
 
 
 class SentimentAnalysisTool(BaseTool):
@@ -15,8 +17,6 @@ class SentimentAnalysisTool(BaseTool):
     def __init__(self):
         self._name = "Sentiment Analysis Tool"
         if HAS_DEPENDENCIES:
-            from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
             self.vader = SentimentIntensityAnalyzer()
         else:
             self.vader = None
@@ -62,8 +62,6 @@ class SentimentAnalysisTool(BaseTool):
             if title:
                 # Wrap CPU-bound NLP in to_thread
                 def _analyze_single(text):
-                    from textblob import TextBlob
-
                     vs = self.vader.polarity_scores(text)
                     tb = TextBlob(text)
                     return {

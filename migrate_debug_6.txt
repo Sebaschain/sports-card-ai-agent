@@ -1,0 +1,34 @@
+2026-01-26 14:22:01.082 
+Warning: the config option 'server.enableCORS=false' is not compatible with
+'server.enableXsrfProtection=true'.
+As a result, 'server.enableCORS' is being overridden to 'true'.
+
+More information:
+In order to protect against CSRF attacks, we send a cookie with each request.
+To do so, we must specify allowable origins, which places a restriction on
+cross-origin resource sharing.
+
+If cross origin resource sharing is required, please disable server.enableXsrfProtection.
+            
+DEBUG CONFIG: path=C:\Users\Sebastian\Documents\sports_cards\sports-card-ai-agent\.env exists=True
+DEBUG CONFIG: env DATABASE_URL=postgresql://neondb_owner:npg_ZpTu4gFBUs9i@ep-dry-dust-aho8a4pv-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+DEBUG: pg_url is 'postgresql://neondb_owner:npg_ZpTu4gFBUs9i@ep-dry-dust-aho8a4pv-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require'
+Starting migration from SQLite to PostgreSQL...
+Migrating users...
+Migrated 8 items from users
+Migrating players...
+Migrated 9 items from players
+Migrating cards...
+Migrated 11 items from cards
+Migrating price_points...
+Migrated 0 items from price_points
+Migrating analyses...
+Migrated 10 items from analyses
+Migrating portfolio_items...
+Migrated 12 items from portfolio_items
+Migrating watchlist...
+Migrated 0 items from watchlist
+Migrating card_images...
+Migrated 0 items from card_images
+
+Migration completed successfully!

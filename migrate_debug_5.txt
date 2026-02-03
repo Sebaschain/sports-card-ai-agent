@@ -1,0 +1,16 @@
+2026-01-26 14:21:25.247 
+Warning: the config option 'server.enableCORS=false' is not compatible with
+'server.enableXsrfProtection=true'.
+As a result, 'server.enableCORS' is being overridden to 'true'.
+
+More information:
+In order to protect against CSRF attacks, we send a cookie with each request.
+To do so, we must specify allowable origins, which places a restriction on
+cross-origin resource sharing.
+
+If cross origin resource sharing is required, please disable server.enableXsrfProtection.
+            
+DEBUG CONFIG: path=C:\Users\Sebastian\Documents\sports_cards\sports-card-ai-agent\.env exists=True
+DEBUG CONFIG: env DATABASE_URL=postgresql://neondb_owner:npg_ZpTu4gFBUs9i@ep-dry-dust-aho8a4pv-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+DEBUG: pg_url is 'sqlite:///./data/sports_cards.db'
+DATABASE_URL in .env is still pointing to SQLite.

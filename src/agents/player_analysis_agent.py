@@ -4,6 +4,8 @@ from datetime import datetime
 from src.tools.nba_stats_tool import NBAStatsTool
 from src.tools.nhl_stats_tool import NHLStatsTool
 from src.tools.mlb_stats_tool import MLBStatsTool
+from src.tools.nfl_stats_tool import NFLStatsTool
+from src.tools.soccer_stats_tool import SoccerStatsTool
 from src.tools.ball_dont_lie_tool import BallDontLieTool
 
 from src.tools.sports_news_tool import SportsNewsTool
@@ -19,6 +21,8 @@ class PlayerAnalysisAgent:
         self.ball_dont_lie = BallDontLieTool()
         self.nhl_tool = NHLStatsTool()
         self.mlb_tool = MLBStatsTool()
+        self.nfl_tool = NFLStatsTool()
+        self.soccer_tool = SoccerStatsTool()
         self.news_tool = SportsNewsTool()
         self.sentiment_tool = SentimentAnalysisTool()
 
@@ -98,6 +102,10 @@ class PlayerAnalysisAgent:
             return await self.nhl_tool.get_player_stats(player_name)
         elif sport == "MLB":
             return await self.mlb_tool.get_player_stats(player_name)
+        elif sport == "NFL":
+            return await self.nfl_tool.get_player_stats(player_name)
+        elif sport == "Soccer":
+            return await self.soccer_tool.get_player_stats(player_name)
         else:
             return {"success": False, "error": "Sport not supported"}
 
@@ -172,6 +180,117 @@ class PlayerAnalysisAgent:
                 score += 15
             elif hrs >= 20:
                 score += 10
+
+        # NFL Analysis
+        elif sport == "NFL":
+            passing_yards = stats.get("passing_yards", 0)
+            passing_tds = stats.get("passing_touchdowns", 0)
+            rushing_yards = stats.get("rushing_yards", 0)
+            rushing_tds = stats.get("rushing_touchdowns", 0)
+            receiving_yards = stats.get("receiving_yards", 0)
+            receiving_tds = stats.get("receiving_touchdowns", 0)
+            receptions = stats.get("receptions", 0)
+            interceptions = stats.get("interceptions", 0)
+
+            # Determine key stats based on role magnitude
+            is_qb = passing_yards > 500
+            is_rb = rushing_yards > 400
+            is_wr_te = receiving_yards > 400
+
+            if is_qb:
+                if passing_yards >= 4500:
+                    score += 25
+                elif passing_yards >= 4000:
+                    score += 20
+                elif passing_yards >= 3500:
+                    score += 15
+
+                if passing_tds >= 35:
+                    score += 15
+                elif passing_tds >= 25:
+                    score += 10
+
+                if interceptions <= 10:
+                    score += 5
+                elif interceptions >= 15:
+                    score -= 5
+
+            elif is_rb:
+                if rushing_yards >= 1400:
+                    score += 25
+                elif rushing_yards >= 1100:
+                    score += 20
+                elif rushing_yards >= 900:
+                    score += 15
+
+                total_tds = rushing_tds + receiving_tds
+                if total_tds >= 12:
+                    score += 15
+                elif total_tds >= 8:
+                    score += 10
+
+                if receptions >= 50:
+                    score += 5
+
+            elif is_wr_te:
+                if receiving_yards >= 1400:
+                    score += 25
+                elif receiving_yards >= 1100:
+                    score += 20
+                elif receiving_yards >= 900:
+                    score += 15
+
+                if receptions >= 100:
+                    score += 10
+                elif receptions >= 80:
+                    score += 5
+
+                if receiving_tds >= 10:
+                    score += 10
+                elif receiving_tds >= 7:
+                    score += 5
+
+            else:
+                # Fallback for lower volume players
+                if passing_yards > 2000 or rushing_yards > 600 or receiving_yards > 600:
+                    score += 10
+
+        # Soccer Analysis
+        elif sport == "Soccer":
+            goals = stats.get("goals", 0)
+            assists = stats.get("assists", 0)
+            matches = stats.get("matches_played", 0)
+            goals_per_game = stats.get("goals_per_game", 0)
+            shots_on_target = stats.get("shots_on_target", 0)
+
+            # Base performance
+            if goals >= 20:
+                score += 25
+            elif goals >= 15:
+                score += 20
+            elif goals >= 10:
+                score += 15
+
+            if assists >= 15:
+                score += 15
+            elif assists >= 10:
+                score += 10
+            elif assists >= 5:
+                score += 5
+
+            # Efficiency
+            if goals_per_game >= 0.7:
+                score += 15
+            elif goals_per_game >= 0.5:
+                score += 10
+
+            # Activity
+            if shots_on_target >= 30:
+                score += 5
+
+            # Consistency bonus (if matches played is high)
+            if matches >= 30:
+                score += 5
 
         # Add bonus from performance text
         if performance_text:

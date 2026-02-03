@@ -14,6 +14,7 @@ from src.models.db_models import (
     PricePointDB,
     AnalysisDB,
     PortfolioItemDB,
+    UserDB,
     SportEnum,
     SignalEnum,
 )
@@ -21,6 +22,35 @@ from src.models.db_models import (
 
 class CardRepository:
     """Repository for card-related operations"""
+
+    @staticmethod
+    def create_user(
+        db: Session,
+        username: str,
+        email: str,
+        hashed_password: str,
+        full_name: str = "",
+    ) -> UserDB:
+        """Create a new user"""
+        user = UserDB(
+            username=username,
+            email=email,
+            hashed_password=hashed_password,
+            full_name=full_name,
+        )
+        db.add(user)
+        db.flush()
+        return user
+
+    @staticmethod
+    def get_user_by_username(db: Session, username: str) -> Optional[UserDB]:
+        """Get user by username"""
+        return db.query(UserDB).filter(UserDB.username == username).first()
+
+    @staticmethod
+    def get_user_by_email(db: Session, email: str) -> Optional[UserDB]:
+        """Get user by email"""
+        return db.query(UserDB).filter(UserDB.email == email).first()
 
     @staticmethod
     def get_or_create_player(
@@ -275,19 +305,25 @@ class CardRepository:
     def add_to_portfolio(
         db: Session,
         card: CardDB,
+        user_id: int,
         purchase_price: float,
         purchase_date: datetime,
         quantity: int = 1,
         notes: str = "",
+        image_url_local: Optional[str] = None,
+        acquisition_source: Optional[str] = None,
     ) -> PortfolioItemDB:
         """Add a card to portfolio"""
         portfolio_item = PortfolioItemDB(
             card_id=card.id,
+            user_id=user_id,
             purchase_price=purchase_price,
             purchase_date=purchase_date,
             quantity=quantity,
             current_value=purchase_price,  # Initial value
             notes=notes,
+            image_url_local=image_url_local,
+            acquisition_source=acquisition_source,
             is_active=True,
         )
         db.add(portfolio_item)
@@ -295,12 +331,15 @@ class CardRepository:
         return portfolio_item
 
     @staticmethod
-    def get_portfolio(db: Session, active_only: bool = True) -> List[Dict[str, Any]]:
-        """Get all portfolio items"""
+    def get_portfolio(
+        db: Session, user_id: int, active_only: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Get all portfolio items for a user"""
         query = (
             db.query(PortfolioItemDB, CardDB, PlayerDB)
             .join(CardDB, PortfolioItemDB.card_id == CardDB.id)
             .join(PlayerDB, CardDB.player_id == PlayerDB.id)
+            .filter(PortfolioItemDB.user_id == user_id)
         )
 
         if active_only:
@@ -326,6 +365,10 @@ class CardRepository:
                     "sport": player.sport.value,
                     "year": card.year,
                     "manufacturer": card.manufacturer,
+                    "is_rookie": card.is_rookie,
+                    "is_auto": card.is_auto,
+                    "is_numbered": card.is_numbered,
+                    "max_print": card.max_print,
                     "purchase_price": portfolio_item.purchase_price,
                     "current_value": portfolio_item.current_value
                     or portfolio_item.purchase_price,
@@ -337,6 +380,8 @@ class CardRepository:
                     "gain_loss": gain_loss * portfolio_item.quantity,
                     "gain_loss_pct": gain_loss_pct,
                     "purchase_date": portfolio_item.purchase_date,
+                    "image_url_local": portfolio_item.image_url_local,
+                    "acquisition_source": portfolio_item.acquisition_source,
                     "notes": portfolio_item.notes,
                     "is_active": portfolio_item.is_active,
                 }
@@ -346,12 +391,13 @@ class CardRepository:
 
     @staticmethod
     def update_portfolio_value(
-        db: Session, portfolio_item_id: int, new_value: float
-    ) -> PortfolioItemDB:
-        """Update current value of a portfolio item"""
+        db: Session, user_id: int, portfolio_item_id: int, new_value: float
+    ) -> Optional[PortfolioItemDB]:
+        """Update current value of a portfolio item if owned by user"""
         portfolio_item = (
             db.query(PortfolioItemDB)
             .filter(PortfolioItemDB.id == portfolio_item_id)
+            .filter(PortfolioItemDB.user_id == user_id)
             .first()
         )
 
@@ -365,14 +411,16 @@ class CardRepository:
     @staticmethod
     def remove_from_portfolio(
         db: Session,
+        user_id: int,
         portfolio_item_id: int,
         sell_price: Optional[float] = None,
         sell_date: Optional[datetime] = None,
-    ) -> PortfolioItemDB:
-        """Remove/sell a card from portfolio"""
+    ) -> Optional[PortfolioItemDB]:
+        """Remove/sell a card from portfolio if owned by user"""
         portfolio_item = (
             db.query(PortfolioItemDB)
             .filter(PortfolioItemDB.id == portfolio_item_id)
+            .filter(PortfolioItemDB.user_id == user_id)
             .first()
         )
 
@@ -385,9 +433,16 @@ class CardRepository:
         return portfolio_item
 
     @staticmethod
-    def get_portfolio_stats(db: Session) -> Dict[str, Any]:
-        """Get portfolio statistics"""
-        active_items = db.query(PortfolioItemDB).filter(PortfolioItemDB.is_active).all()
+    def get_portfolio_stats(db: Session, user_id: int) -> Dict[str, Any]:
+        """Get advanced portfolio statistics for a user"""
+        active_items = (
+            db.query(PortfolioItemDB, CardDB, PlayerDB)
+            .join(CardDB, PortfolioItemDB.card_id == CardDB.id)
+            .join(PlayerDB, CardDB.player_id == PlayerDB.id)
+            .filter(PortfolioItemDB.user_id == user_id)
+            .filter(PortfolioItemDB.is_active)
+            .all()
+        )
 
         if not active_items:
             return {
@@ -396,46 +451,81 @@ class CardRepository:
                 "current_value": 0,
                 "total_gain_loss": 0,
                 "total_gain_loss_pct": 0,
+                "sport_distribution": {},
                 "best_performer": None,
                 "worst_performer": None,
             }
 
-        total_invested = sum(
-            item.purchase_price * item.quantity for item in active_items
-        )
-        current_value = sum(
-            (item.current_value or item.purchase_price) * item.quantity
-            for item in active_items
-        )
+        total_invested = 0
+        current_value = 0
+        sport_stats = {}  # sport -> {invested, current}
+
+        items_performance = []
+
+        for p_item, card, player in active_items:
+            invested = p_item.purchase_price * p_item.quantity
+            current = (p_item.current_value or p_item.purchase_price) * p_item.quantity
+
+            total_invested += invested
+            current_value += current
+
+            sport_val = player.sport.value
+            if sport_val not in sport_stats:
+                sport_stats[sport_val] = {"invested": 0, "current": 0}
+            sport_stats[sport_val]["invested"] += invested
+            sport_stats[sport_val]["current"] += current
+
+            gain_pct = (
+                (
+                    (
+                        (p_item.current_value or p_item.purchase_price)
+                        - p_item.purchase_price
+                    )
+                    / p_item.purchase_price
+                    * 100
+                )
+                if p_item.purchase_price > 0
+                else 0
+            )
+            items_performance.append(
+                {
+                    "name": f"{player.name} ({card.year})",
+                    "gain_pct": gain_pct,
+                    "gain_abs": current - invested,
+                }
+            )
+
         total_gain_loss = current_value - total_invested
         total_gain_loss_pct = (
             (total_gain_loss / total_invested * 100) if total_invested > 0 else 0
         )
 
-        # Best and worst performers
-        items_with_performance = []
-        for item in active_items:
-            gain_loss_pct = (
-                (
-                    ((item.current_value or item.purchase_price) - item.purchase_price)
-                    / item.purchase_price
-                    * 100
-                )
-                if item.purchase_price > 0
-                else 0
-            )
-            items_with_performance.append((item.id, gain_loss_pct))
-
+        # Best and worst
         best = (
-            max(items_with_performance, key=lambda x: x[1])
-            if items_with_performance
+            max(items_performance, key=lambda x: x["gain_pct"])
+            if items_performance
             else None
         )
         worst = (
-            min(items_with_performance, key=lambda x: x[1])
-            if items_with_performance
+            min(items_performance, key=lambda x: x["gain_pct"])
+            if items_performance
             else None
         )
+
+        # ROI per sport
+        sport_distribution = {}
+        for sport, vals in sport_stats.items():
+            s_gain = vals["current"] - vals["invested"]
+            s_roi = (s_gain / vals["invested"] * 100) if vals["invested"] > 0 else 0
+            sport_distribution[sport] = {
+                "invested": round(vals["invested"], 2),
+                "current": round(vals["current"], 2),
+                "roi": round(s_roi, 2),
+                "share": round(
+                    (vals["current"] / current_value * 100) if current_value > 0 else 0,
+                    2,
+                ),
+            }
 
         return {
             "total_items": len(active_items),
@@ -443,8 +533,58 @@ class CardRepository:
             "current_value": round(current_value, 2),
             "total_gain_loss": round(total_gain_loss, 2),
             "total_gain_loss_pct": round(total_gain_loss_pct, 2),
-            "best_performer_id": best[0] if best else None,
-            "best_performer_pct": best[1] if best else 0,
-            "worst_performer_id": worst[0] if worst else None,
-            "worst_performer_pct": worst[1] if worst else 0,
+            "sport_distribution": sport_distribution,
+            "best_performer": best,
+            "worst_performer": worst,
+            "items_performance": sorted(
+                items_performance, key=lambda x: x["gain_pct"], reverse=True
+            ),
         }
+
+    @staticmethod
+    async def update_all_portfolio_prices(
+        db: Session, user_id: int, market_agent: Any
+    ) -> Dict[str, Any]:
+        """
+        Update market values for all active portfolio items using IA for a user
+        """
+        active_items = (
+            db.query(PortfolioItemDB, CardDB, PlayerDB)
+            .join(CardDB, PortfolioItemDB.card_id == CardDB.id)
+            .join(PlayerDB, CardDB.player_id == PlayerDB.id)
+            .filter(PortfolioItemDB.user_id == user_id)
+            .filter(PortfolioItemDB.is_active)
+            .all()
+        )
+
+        results = {"total": len(active_items), "updated": 0, "errors": 0, "details": []}
+
+        for p_item, card, player in active_items:
+            try:
+                # Use IA agent to get real market data
+                analysis = await market_agent.research_card_market(
+                    player_name=player.name,
+                    year=card.year,
+                    manufacturer=card.manufacturer,
+                )
+
+                new_price = analysis["market_analysis"]["sold_items"]["average_price"]
+
+                if new_price > 0:
+                    p_item.current_value = new_price
+                    p_item.last_updated = datetime.now()
+                    results["updated"] += 1
+                    results["details"].append(
+                        f"✅ {player.name} {card.year}: ${new_price}"
+                    )
+                else:
+                    results["details"].append(
+                        f"ℹ️ {player.name} {card.year}: No se encontró precio"
+                    )
+
+            except Exception as e:
+                results["errors"] += 1
+                results["details"].append(f"❌ {player.name}: {str(e)}")
+
+        db.flush()
+        return results

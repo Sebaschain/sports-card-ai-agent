@@ -1,0 +1,24 @@
+2026-01-26 14:19:09.014 
+Warning: the config option 'server.enableCORS=false' is not compatible with
+'server.enableXsrfProtection=true'.
+As a result, 'server.enableCORS' is being overridden to 'true'.
+
+More information:
+In order to protect against CSRF attacks, we send a cookie with each request.
+To do so, we must specify allowable origins, which places a restriction on
+cross-origin resource sharing.
+
+If cross origin resource sharing is required, please disable server.enableXsrfProtection.
+            
+DEBUG: pg_url is sqlite:///./data/sports_cards.db
+Traceback (most recent call last):
+  File "C:\Users\Sebastian\Documents\sports_cards\sports-card-ai-agent\scripts\migrate_to_postgres.py", line 101, in <module>
+    migrate()
+    ~~~~~~~^^
+  File "C:\Users\Sebastian\Documents\sports_cards\sports-card-ai-agent\scripts\migrate_to_postgres.py", line 43, in migrate
+    print("\u274c DATABASE_URL in .env is still pointing to SQLite.")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Sebastian\AppData\Local\Programs\Python\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>

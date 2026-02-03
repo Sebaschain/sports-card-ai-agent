@@ -1,0 +1,25 @@
+2026-01-26 12:51:12.078 
+Warning: the config option 'server.enableCORS=false' is not compatible with
+'server.enableXsrfProtection=true'.
+As a result, 'server.enableCORS' is being overridden to 'true'.
+
+More information:
+In order to protect against CSRF attacks, we send a cookie with each request.
+To do so, we must specify allowable origins, which places a restriction on
+cross-origin resource sharing.
+
+If cross origin resource sharing is required, please disable server.enableXsrfProtection.
+            
+Starting Authentication and Privacy Test...
+Database initialized
+Creating users: user_a_20260126125112, user_b_20260126125112
+Users created with IDs: 7, 8
+Adding card to User A's portfolio...
+User A portfolio size: 1
+User B portfolio size: 0
+Adding card to User B's portfolio...
+User A portfolio size: 1
+User B portfolio size: 1
+Isolation test passed!
+
+ALL AUTH TESTS PASSED

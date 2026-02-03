@@ -1,104 +1,129 @@
-from typing import Dict, Any, Optional
-import asyncio
-from src.tools.base_tool import BaseStatsTool
+"""
+MLB Stats Tool - Enhanced with official MLB Stats API
+"""
 
-try:
-    import statsapi
-
-    MLB_API_AVAILABLE = True
-except ImportError:
-    MLB_API_AVAILABLE = False
+from typing import Dict, Any
+import httpx
+from src.utils.stats_cache import stats_cache
 
 
-class MLBStatsTool(BaseStatsTool):
-    """Tool to fetch real MLB player statistics"""
+class MLBStatsTool:
+    """Enhanced MLB stats tool with official MLB API"""
 
     def __init__(self):
-        self._name = "MLB Stats Tool"
-        if not MLB_API_AVAILABLE:
-            print("⚠️  MLB Stats API not installed. Using simulated data.")
-
-    @property
-    def tool_name(self) -> str:
-        return self._name
-
-    async def find_player(self, player_name: str) -> Optional[Dict[str, Any]]:
-        """Find player by name"""
-        if not MLB_API_AVAILABLE:
-            return None
-
-        try:
-            # Search for player
-            results = await asyncio.to_thread(statsapi.lookup_player, player_name)
-            if results:
-                return results[0]
-            return None
-        except Exception as e:
-            print(f"Error finding player: {e}")
-            return None
+        self.name = "MLB Stats Tool (Official API)"
+        self.base_url = "https://statsapi.mlb.com/api/v1"
 
     async def get_player_stats(self, player_name: str) -> Dict[str, Any]:
         """
-        Get current season stats for a player
+        Get real MLB player statistics from official API
+
+        Args:
+            player_name: Player's name
 
         Returns:
-            Dict with player stats
+            Dict with player statistics
         """
-        if not MLB_API_AVAILABLE:
-            return self._get_simulated_stats(player_name)
+        # Check cache first
+        cached = stats_cache.get("player_stats", f"mlb_{player_name}")
+        if cached:
+            cached["from_cache"] = True
+            return cached
 
         try:
-            # Find player
-            player = await self.find_player(player_name)
-            if not player:
-                return {"success": False, "error": f"Player '{player_name}' not found"}
+            # Search for player
+            player_id = await self._search_player(player_name)
 
-            player_id = player["id"]
+            if not player_id:
+                return self._get_simulated_stats(player_name)
 
-            # Get stats for current season
-            stats = await asyncio.to_thread(
-                statsapi.player_stat_data,
-                player_id,
-                group="hitting",  # or "pitching"
-                type="season",
-            )
+            # Get player stats
+            stats = await self._fetch_player_stats(player_id, player_name)
 
-            if stats and "stats" in stats:
-                current_stats = stats["stats"][0]["stats"]
+            if stats and stats.get("success"):
+                stats_cache.set("player_stats", f"mlb_{player_name}", stats)
+                return stats
 
-                return {
-                    "success": True,
-                    "player_name": player_name,
-                    "player_id": player_id,
-                    "team": stats.get("current_team", "Unknown"),
-                    "position": stats.get("position", "Unknown"),
-                    "season": "2024",
-                    "games_played": current_stats.get("gamesPlayed", 0),
-                    "batting_avg": float(current_stats.get("avg", 0)),
-                    "home_runs": int(current_stats.get("homeRuns", 0)),
-                    "rbi": int(current_stats.get("rbi", 0)),
-                    "hits": int(current_stats.get("hits", 0)),
-                }
-            else:
-                return {"success": False, "error": "No stats available"}
-
-        except Exception as e:
-            print(f"Error fetching MLB stats: {e}")
             return self._get_simulated_stats(player_name)
 
+        except Exception as e:
+            print(f"Error fetching MLB stats for {player_name}: {e}")
+            return self._get_simulated_stats(player_name)
+
+    async def _search_player(self, player_name: str) -> int:
+        """Search for player by name"""
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                # Use sports/players/search endpoint
+                response = await client.get(
+                    f"{self.base_url}/sports/1/players", params={"season": 2024}
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    players = data.get("people", [])
+
+                    # Find matching player
+                    for player in players:
+                        full_name = player.get("fullName", "")
+                        if player_name.lower() in full_name.lower():
+                            return player.get("id")
+
+            return None
+
+        except Exception as e:
+            print(f"Error searching MLB player: {e}")
+            return None
+
+    async def _fetch_player_stats(
+        self, player_id: int, player_name: str
+    ) -> Dict[str, Any]:
+        """Fetch detailed player stats"""
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(
+                    f"{self.base_url}/people/{player_id}/stats",
+                    params={"stats": "season", "season": 2024, "group": "hitting"},
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    stats_data = data.get("stats", [])
+
+                    if stats_data and stats_data[0].get("splits"):
+                        split = stats_data[0]["splits"][0]
+                        stat = split.get("stat", {})
+
+                        return {
+                            "success": True,
+                            "simulated": False,
+                            "player_name": player_name,
+                            "note": "Real data from MLB Stats API",
+                            "batting_avg": float(stat.get("avg", 0)),
+                            "home_runs": int(stat.get("homeRuns", 0)),
+                            "rbi": int(stat.get("rbi", 0)),
+                            "hits": int(stat.get("hits", 0)),
+                            "runs": int(stat.get("runs", 0)),
+                            "stolen_bases": int(stat.get("stolenBases", 0)),
+                        }
+
+            return {"success": False}
+
+        except Exception as e:
+            print(f"Error fetching MLB player stats: {e}")
+            return {"success": False}
+
     def _get_simulated_stats(self, player_name: str) -> Dict[str, Any]:
-        """Simulated stats when API is not available"""
+        """Return simulated stats as fallback"""
         return {
             "success": True,
-            "player_name": player_name,
             "simulated": True,
-            "team": "Unknown",
-            "position": "Unknown",
-            "season": "2024",
-            "games_played": 120,
+            "player_name": player_name,
+            "note": "Using simulated data - Player not found in API",
             "batting_avg": 0.285,
             "home_runs": 28,
-            "rbi": 85,
-            "hits": 135,
-            "note": "Simulated data - install mlb-statsapi for real stats",
+            "rbi": 95,
+            "hits": 165,
+            "runs": 88,
+            "stolen_bases": 12,
         }
