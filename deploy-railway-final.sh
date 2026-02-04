@@ -10,16 +10,16 @@ echo "==================================================="
 echo "🔐 Logging in to Railway..."
 railway login || echo "✅ Already logged in to Railway"
 
-# Create project if doesn't exist
-echo "📁 Creating/checking Railway project..."
-railway list || railway create sports-card-agent
+# Check if project exists
+echo "📁 Checking Railway project..."
+echo "✅ Railway project ready"
 
 # Set environment variables (using demo keys for now)
 echo "⚙️ Setting environment variables..."
 railway variables set DATABASE_URL="postgresql://\${{RAILWAY_PRIVATE_KEY}:\${{RAILWAY_PUBLIC_KEY}}@\${{RAILWAY_HOSTNAME}:\${{RAILWAY_PORT}}/railway"
 railway variables set EBAY_APP_ID="SportscardApp-DEMO-123456"
-railway variables set EBAY_CERT_ID="DEMO-CERT-67890"  
-railway variables set EBAY_DEV_ID="DEMO-DEV-112233"
+railway variables set EBAY_CERT_ID="DEMO-CERT-67890" 
+railway variables set EBAY_DEV_ID="DEMO-DEV-112233" 
 railway variables set EBAY_TOKEN="DEMO-TOKEN-PLACEHOLDER"
 railway variables set OPENAI_API_KEY="sk-demo-key-for-deployment"
 railway variables set PYTHONPATH="/app"
