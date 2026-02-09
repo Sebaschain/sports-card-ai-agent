@@ -44,13 +44,13 @@ class CardRepository:
 
     @staticmethod
     def get_user_by_username(db: Session, username: str) -> Optional[UserDB]:
-        """Get user by username"""
-        return db.query(UserDB).filter(UserDB.username == username).first()
+        """Get user by username (case-insensitive)"""
+        return db.query(UserDB).filter(UserDB.username.ilike(username)).first()
 
     @staticmethod
     def get_user_by_email(db: Session, email: str) -> Optional[UserDB]:
-        """Get user by email"""
-        return db.query(UserDB).filter(UserDB.email == email).first()
+        """Get user by email (case-insensitive)"""
+        return db.query(UserDB).filter(UserDB.email.ilike(email)).first()
 
     @staticmethod
     def get_or_create_player(
