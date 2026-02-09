@@ -155,7 +155,7 @@ def main():
         # Mapeo para stauth
         credentials = {
             "usernames": {
-                u.username: {
+                u.username.lower(): {
                     "name": u.full_name,
                     "password": u.hashed_password,
                     "email": u.email,
@@ -164,9 +164,14 @@ def main():
             }
         }
 
+    import os
+
+    env_str = os.getenv("RAILWAY_ENVIRONMENT_NAME", "local")
+    cookie_name = f"sports_card_agent_cookie_{env_str}"
+
     authenticator = stauth.Authenticate(
         credentials,
-        "sports_card_agent_cookie",
+        cookie_name,
         "sports_card_agent_key",
         cookie_expiry_days=30,
     )
@@ -241,7 +246,21 @@ def main():
                         )
                         st.rerun()
 
-    authenticator.login(location="sidebar")
+    # Try to login, handle potential session/cookie errors gracefully
+    try:
+        if users:
+            authenticator.login(location="sidebar")
+    except Exception as e:
+        # This often happens if a cookie exists for a user not in the current DB
+        if "User not authorized" in str(e):
+            st.session_state["authentication_status"] = None
+            st.session_state["username"] = None
+            st.session_state["name"] = None
+            if "logout" in st.session_state:
+                del st.session_state["logout"]
+        else:
+            logger.error(f"Authentication error: {e}")
+            st.error(f"Error de autenticación: {e}")
 
     authentication_status = st.session_state.get("authentication_status")
     name = st.session_state.get("name")
