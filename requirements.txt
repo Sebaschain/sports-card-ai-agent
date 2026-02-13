@@ -40,3 +40,6 @@ flask>=2.3.0
 # Data processing
 numpy>=1.26.0
 scikit-learn>=1.4.0
+
+# Sports APIs
+nba-api>=1.6.0
