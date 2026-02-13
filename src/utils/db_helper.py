@@ -1,77 +1,76 @@
-"""Helper functions to save analyses to database"""
-import json
+"""Database helper functions"""
+
 from typing import Dict, Any
 from src.utils.database import get_db
 from src.utils.repository import CardRepository
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def save_analysis_to_db(
     player_name: str,
-    year: int,
-    manufacturer: str,
     sport: str,
-    analysis_result: Dict[str, Any],
-    analysis_type: str = "simple"
+    card_info: Dict[str, Any],
+    market: Dict[str, Any],
+    performance: Dict[str, Any],
+    strategy: Dict[str, Any],
 ) -> bool:
-    """Save an analysis result to database"""
+    """Salva el análisis completo en la base de datos"""
     try:
+        # Extraer datos de los diccionarios de los agentes
+        market_data = market.get("market_analysis", {})
+
+        year = card_info.get("year", 2024)
+        manufacturer = card_info.get("manufacturer", "Unknown")
+
         with get_db() as db:
-            player_id = f"{player_name.lower().replace(' ', '-')}-{sport.lower()}"
-            player = CardRepository.get_or_create_player(
+            # Get or create player and card first
+            player_db = CardRepository.get_or_create_player(
                 db=db,
-                player_id=player_id,
+                player_id=f"{sport.lower()}_{player_name.lower().replace(' ', '_')}",
                 name=player_name,
-                sport=sport
+                sport=sport,
             )
-            
-            card_id = f"{player_id}-{year}-{manufacturer.lower()}"
-            card = CardRepository.get_or_create_card(
+
+            card_db = CardRepository.get_or_create_card(
                 db=db,
-                card_id=card_id,
-                player_db=player,
+                card_id=f"card_{player_db.id}_{year}_{manufacturer.lower()}",
+                player_db=player_db,
                 year=year,
-                manufacturer=manufacturer
+                manufacturer=manufacturer,
             )
-            
-            recommendation = analysis_result.get("recommendation", {})
-            signal = recommendation.get("signal", "HOLD")
-            confidence = recommendation.get("confidence", 0.5)
-            
-            market = analysis_result.get("detailed_analysis", {}).get("market", {}).get("market_analysis", {})
-            player_data = analysis_result.get("detailed_analysis", {}).get("player", {}).get("analysis", {})
-            performance = player_data.get("performance_score", {})
-            
-            if isinstance(confidence, str) and '%' in confidence:
-                confidence = float(confidence.rstrip('%')) / 100
-            elif not isinstance(confidence, float):
-                confidence = float(confidence)
-            
+
+            # Crear o actualizar registro usando métodos estáticos
             CardRepository.save_analysis(
                 db=db,
-                card=card,
-                analysis_type=analysis_type,
-                signal=signal,
-                confidence=confidence,
-                reasoning=analysis_result.get("reasoning", ""),
-                factors=analysis_result.get("action_items", []),
-                action_items=analysis_result.get("action_items", []),
-                current_price=recommendation.get("price_targets", {}).get("entry_price"),
-                target_buy_price=recommendation.get("price_targets", {}).get("entry_price"),
-                target_sell_price=recommendation.get("price_targets", {}).get("target_sell_price"),
-                stop_loss=recommendation.get("price_targets", {}).get("stop_loss"),
-                market_avg_price=market.get("sold_items", {}).get("average_price"),
-                market_liquidity=market.get("liquidity"),
-                market_sold_count=market.get("sold_items", {}).get("count"),
-                player_score=performance.get("overall_score"),
-                player_rating=performance.get("rating"),
-                player_trend=performance.get("trend")
+                card=card_db,
+                analysis_type="Advanced Multi-Agent",
+                signal=strategy.get("strategy", {}).get("signal", "HOLD"),
+                confidence=strategy.get("strategy", {}).get("confidence", 0.5),
+                reasoning=strategy.get("strategy", {}).get("reasoning", ""),
+                factors=strategy.get("strategy", {}).get("factors", []),
+                action_items=strategy.get("strategy", {}).get("action_items", []),
+                player_score=performance.get("score", 70),
+                player_trend=performance.get("trend"),
+                min_price=market_data.get("sold_items", {}).get("min_price", 0),
+                max_price=market_data.get("sold_items", {}).get("max_price", 0),
+                avg_price=market_data.get("sold_items", {}).get("average_price", 0),
             )
-            
-            print(f"✅ Analysis saved to database: {player_name} {year}")
+
+            # También guardar punto de precio si hubo venta
+            if market_data.get("sold_items", {}).get("average_price", 0) > 0:
+                CardRepository.save_price_point(
+                    db=db,
+                    card=card_db,
+                    price=market_data.get("sold_items", {}).get("average_price", 0),
+                    marketplace="eBay",
+                    sold=True,
+                )
+
+            logger.info(f"Analysis saved to database for {player_name} ({year})")
             return True
-            
+
     except Exception as e:
-        print(f"❌ Error saving to database: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error saving analysis to database: {e}", exc_info=True)
         return False

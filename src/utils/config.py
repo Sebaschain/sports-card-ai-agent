@@ -5,6 +5,7 @@ Load environment variables and global settings
 
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -46,6 +47,9 @@ class Settings:
     EBAY_CERT_ID: str = get_secret("EBAY_CERT_ID", "")
     EBAY_DEV_ID: str = get_secret("EBAY_DEV_ID", "")
     EBAY_TOKEN: str = get_secret("EBAY_TOKEN", "")
+    # OAuth credentials for Browse API (Client Secret puede ser igual al Cert ID para legacy)
+    EBAY_CLIENT_ID: str = get_secret("EBAY_CLIENT_ID", "")
+    EBAY_CLIENT_SECRET: str = get_secret("EBAY_CLIENT_SECRET", get_secret("EBAY_CERT_ID", ""))
 
     # Ball Don't Lie
     BDL_API_KEY: str = get_secret("BDL_API_KEY", "")
@@ -70,9 +74,7 @@ def validate_configuration():
 
     # Check required API keys
     if not settings.EBAY_APP_ID:
-        warnings.append(
-            "EBAY_APP_ID not configured - eBay features will use simulated data"
-        )
+        warnings.append("EBAY_APP_ID not configured - eBay features will use simulated data")
 
     if not settings.OPENAI_API_KEY:
         warnings.append("OPENAI_API_KEY not configured - AI features will be limited")

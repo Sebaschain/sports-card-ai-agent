@@ -5,6 +5,9 @@ MLB Stats Tool - Enhanced with official MLB Stats API
 from typing import Dict, Any
 import httpx
 from src.utils.stats_cache import stats_cache
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class MLBStatsTool:
@@ -47,7 +50,7 @@ class MLBStatsTool:
             return self._get_simulated_stats(player_name)
 
         except Exception as e:
-            print(f"Error fetching MLB stats for {player_name}: {e}")
+            logger.error(f"Error fetching MLB stats for {player_name}: {e}")
             return self._get_simulated_stats(player_name)
 
     async def _search_player(self, player_name: str) -> int:
@@ -56,7 +59,7 @@ class MLBStatsTool:
             async with httpx.AsyncClient(timeout=10) as client:
                 # Use sports/players/search endpoint
                 response = await client.get(
-                    f"{self.base_url}/sports/1/players", params={"season": 2024}
+                    f"{self.base_url}/sports/1/players", params={"season": 2025}
                 )
 
                 if response.status_code == 200:
@@ -72,7 +75,7 @@ class MLBStatsTool:
             return None
 
         except Exception as e:
-            print(f"Error searching MLB player: {e}")
+            logger.error(f"Error searching MLB player: {e}")
             return None
 
     async def _fetch_player_stats(
@@ -83,7 +86,7 @@ class MLBStatsTool:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get(
                     f"{self.base_url}/people/{player_id}/stats",
-                    params={"stats": "season", "season": 2024, "group": "hitting"},
+                    params={"stats": "season", "season": 2025, "group": "hitting"},
                 )
 
                 if response.status_code == 200:
@@ -110,7 +113,7 @@ class MLBStatsTool:
             return {"success": False}
 
         except Exception as e:
-            print(f"Error fetching MLB player stats: {e}")
+            logger.error(f"Error fetching MLB player stats: {e}")
             return {"success": False}
 
     def _get_simulated_stats(self, player_name: str) -> Dict[str, Any]:

@@ -5,11 +5,14 @@ Provides common functionality for web scraping with rate limiting and error hand
 
 import time
 import random
-from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from typing import Optional, Dict
 import httpx
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class ScrapingUtils:
@@ -64,10 +67,10 @@ class ScrapingUtils:
                 return response.text
 
         except httpx.HTTPStatusError as e:
-            print(f"HTTP error fetching {url}: {e.response.status_code}")
+            logger.error(f"HTTP error fetching {url}: {e.response.status_code}")
             return None
         except Exception as e:
-            print(f"Error fetching {url}: {e}")
+            logger.error(f"Error fetching {url}: {e}")
             return None
 
     def parse_html(self, html: str) -> Optional[BeautifulSoup]:
@@ -75,7 +78,7 @@ class ScrapingUtils:
         try:
             return BeautifulSoup(html, "lxml")
         except Exception as e:
-            print(f"Error parsing HTML: {e}")
+            logger.error(f"Error parsing HTML: {e}")
             return None
 
 

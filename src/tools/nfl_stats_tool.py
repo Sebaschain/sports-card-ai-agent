@@ -6,6 +6,9 @@ from typing import Dict, Any, Optional
 import httpx
 import asyncio
 from src.utils.stats_cache import stats_cache
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class NFLStatsTool:
@@ -45,11 +48,11 @@ class NFLStatsTool:
                 return stats
 
             # Fallback to simulated data
-            print(f"ESPN API failed for {player_name}, using simulated data.")
+            logger.info(f"ESPN API failed for {player_name}, using simulated data.")
             return self._get_simulated_stats(player_name)
 
         except Exception as e:
-            print(f"Error fetching NFL stats for {player_name}: {e}")
+            logger.error(f"Error fetching NFL stats for {player_name}: {e}")
             return self._get_simulated_stats(player_name)
 
     async def _fetch_from_espn(self, player_name: str) -> Dict[str, Any]:
@@ -72,7 +75,7 @@ class NFLStatsTool:
         if normalized_name in self.player_id_cache:
             return self.player_id_cache[normalized_name]
 
-        print(f"Searching ESPN for {player_name} (this may take a moment)...")
+        logger.info(f"Searching ESPN for {player_name} (this may take a moment)...")
 
         # 2. Search via Team Rosters (Most reliable from debug testing)
         teams_url = f"{self.espn_base}/teams"
@@ -95,6 +98,11 @@ class NFLStatsTool:
                         for section in r_data["athletes"]:
                             for item in section.get("items", []):
                                 if (
+                                    player_name.lower()
+                                    == item.get("displayName", "").lower()
+                                ):
+                                    return item
+                                elif (
                                     player_name.lower()
                                     in item.get("displayName", "").lower()
                                 ):
@@ -119,7 +127,7 @@ class NFLStatsTool:
                         return pid
 
         except Exception as e:
-            print(f"Error searching teams: {e}")
+            logger.error(f"Error searching teams: {e}")
 
         return None
 
@@ -204,7 +212,7 @@ class NFLStatsTool:
             return result
 
         except Exception as e:
-            print(f"Error parsing detailed stats: {e}")
+            logger.error(f"Error parsing detailed stats: {e}")
             return {"success": False, "error": f"Stats parsing error: {str(e)}"}
 
     def _get_simulated_stats(self, player_name: str) -> Dict[str, Any]:

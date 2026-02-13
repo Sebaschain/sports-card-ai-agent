@@ -3,11 +3,13 @@ NBA Stats Tool - Enhanced with real NBA API
 Uses nba_api (official NBA.com API) with fallbacks
 """
 
-from typing import Dict, Any, Optional
-import httpx
-from nba_api.stats.endpoints import playercareerstats, commonplayerinfo, playergamelog
+from typing import Dict, Any
+from nba_api.stats.endpoints import playercareerstats
 from nba_api.stats.static import players
 from src.utils.stats_cache import stats_cache
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class NBAStatsTool:
@@ -38,12 +40,13 @@ class NBAStatsTool:
             player_dict = players.find_players_by_full_name(player_name)
 
             if not player_dict:
-                # Try partial match
+                # Try partial match or split names
                 all_players = players.get_active_players()
+                search_terms = player_name.lower().split()
                 player_dict = [
                     p
                     for p in all_players
-                    if player_name.lower() in p["full_name"].lower()
+                    if all(term in p["full_name"].lower() for term in search_terms)
                 ]
 
             if not player_dict:
@@ -103,7 +106,7 @@ class NBAStatsTool:
             return {"success": False, "error": "No stats available", "simulated": False}
 
         except Exception as e:
-            print(f"Error fetching NBA stats for {player_name}: {e}")
+            logger.error(f"Error fetching NBA stats for {player_name}: {e}")
             # Return simulated data as fallback
             return {
                 "success": True,

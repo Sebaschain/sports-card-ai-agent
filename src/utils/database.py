@@ -7,6 +7,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
 
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 from src.utils.config import settings
 
 # Create engine
@@ -40,7 +44,7 @@ Base = declarative_base()
 def init_db():
     """Initialize database tables"""
     Base.metadata.create_all(bind=engine)
-    print("Database initialized")
+    logger.info("Database initialized")
 
 
 @contextmanager

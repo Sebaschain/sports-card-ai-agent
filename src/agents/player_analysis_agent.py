@@ -10,6 +10,9 @@ from src.tools.ball_dont_lie_tool import BallDontLieTool
 
 from src.tools.sports_news_tool import SportsNewsTool
 from src.tools.sentiment_tool import SentimentAnalysisTool
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class PlayerAnalysisAgent:
@@ -90,8 +93,8 @@ class PlayerAnalysisAgent:
             stats = await self.nba_tool.get_player_stats(player_name)
 
             if not stats.get("success") or stats.get("simulated"):
-                print(
-                    "🔄 NBA Stats falló o es simulado, intentando con Ball Don't Lie..."
+                logger.info(
+                    f"NBA Stats failed or is simulated for {player_name}, trying Ball Don't Lie..."
                 )
                 bdl_stats = await self.ball_dont_lie.get_player_stats(player_name)
                 if bdl_stats.get("success"):
@@ -115,10 +118,11 @@ class PlayerAnalysisAgent:
         """Analiza las estadísticas y genera score"""
 
         if not stats.get("success"):
-            # Fallback to simple analysis
-            score = 75
+            # Fallback to neutral analysis instead of overly optimistic 75
+            logger.warning(f"Using neutral fallback stats for {sport} player")
+            score = 60
             trend = "Stable"
-            rating = "Good"
+            rating = "Average"
             return score, trend, rating
 
         score = 50  # Base score

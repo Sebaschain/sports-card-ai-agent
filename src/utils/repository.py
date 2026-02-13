@@ -588,3 +588,17 @@ class CardRepository:
 
         db.flush()
         return results
+
+    @staticmethod
+    def get_latest_price_points(db: Session, limit: int = 10):
+        """Get the most recent price points across all cards"""
+        from src.models.db_models import PricePointDB, CardDB, PlayerDB
+
+        return (
+            db.query(PricePointDB, CardDB, PlayerDB)
+            .join(CardDB, PricePointDB.card_id == CardDB.id)
+            .join(PlayerDB, CardDB.player_id == PlayerDB.id)
+            .order_by(PricePointDB.timestamp.desc())
+            .limit(limit)
+            .all()
+        )

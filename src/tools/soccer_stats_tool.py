@@ -7,6 +7,9 @@ import httpx
 import asyncio
 from src.utils.stats_cache import stats_cache
 from src.utils.scraping_utils import scraper
+from src.utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class SoccerStatsTool:
@@ -70,7 +73,7 @@ class SoccerStatsTool:
             return self._get_simulated_stats(player_name)
 
         except Exception as e:
-            print(f"Error fetching Soccer stats for {player_name}: {e}")
+            logger.error(f"Error fetching Soccer stats for {player_name}: {e}")
             return self._get_simulated_stats(player_name)
 
     async def _fetch_from_espn_scraping(self, player_name: str) -> Dict[str, Any]:
@@ -97,7 +100,9 @@ class SoccerStatsTool:
         if normalized_name in self.player_id_cache:
             return self.player_id_cache[normalized_name]
 
-        print(f"Searching ESPN Soccer for {player_name} (checking major leagues)...")
+        logger.info(
+            f"Searching ESPN Soccer for {player_name} (checking major leagues)..."
+        )
 
         # 2. Search via Team Rosters
         # Logic similar to debug script: iterate leagues -> teams -> roster
@@ -114,8 +119,8 @@ class SoccerStatsTool:
                 teams = data["sports"][0].get("leagues", [{}])[0].get("teams", [])
 
                 # We can construct tasks to check rosters in parallel for this league
-                # Limit concurrency to avoid rate limits
-                semaphore = asyncio.Semaphore(3)
+                # Increasing concurrency for speed
+                semaphore = asyncio.Semaphore(5)
 
                 async def check_roster(team_item, lg):
                     async with semaphore:
@@ -128,7 +133,7 @@ class SoccerStatsTool:
                             r_resp = await client.get(roster_url)
 
                             if r_resp.status_code != 200:
-                                print(
+                                logger.warning(
                                     f"Failed to fetch roster {tid}: {r_resp.status_code}"
                                 )
                                 return None
@@ -139,12 +144,12 @@ class SoccerStatsTool:
                                     for ath in grp.get("items", []):
                                         name = ath.get("displayName", "")
                                         if player_name.lower() in name.lower():
-                                            print(
+                                            logger.info(
                                                 f"FOUND PLAYER: {name} in {lg} team {tid}"
                                             )
                                             return {"id": ath.get("id"), "league": lg}
                         except Exception as e:
-                            print(f"Error checking roster {tid}: {e}")
+                            logger.error(f"Error checking roster {tid}: {e}")
                             pass
 
                         # Small delay to be nice
@@ -161,7 +166,7 @@ class SoccerStatsTool:
                         return res
 
             except Exception as e:
-                print(f"Error searching league {league}: {e}")
+                logger.error(f"Error searching league {league}: {e}")
 
         return None
 
@@ -237,7 +242,7 @@ class SoccerStatsTool:
             return result
 
         except Exception as e:
-            print(f"Error parsing soccer stats: {e}")
+            logger.error(f"Error parsing soccer stats: {e}")
             return {"success": False, "error": str(e)}
 
     async def _fetch_from_api(self, player_name: str) -> Dict[str, Any]:

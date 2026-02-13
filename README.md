@@ -1,21 +1,31 @@
-🏀 Sports Card AI Agent
+# 🏀 Sports Card AI Agent
+
 An intelligent multi-agent system for analyzing and trading sports cards using AI, built with LangChain, LangGraph, and the Model Context Protocol (MCP).
-Show Image
-Show Image
-Show Image
-🎯 Overview
+
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-37-green.svg)](#-running-tests)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## 🎯 Overview
+
 This project implements a sophisticated AI-powered system for sports card investment analysis. It combines multiple specialized AI agents that work together to provide comprehensive market research, player performance analysis, and trading recommendations.
-Key Features
 
-🤖 Multi-Agent System: Coordinated AI agents using LangGraph
-📊 Market Research: Real-time eBay integration for price analysis
-🏀 Player Analysis: Performance evaluation and risk assessment
-📈 Trading Strategy: Intelligent buy/sell/hold recommendations
-🔌 MCP Server: Standardized protocol for tool exposure
-🌐 Web Interface: Interactive Streamlit dashboard
-💻 Claude Desktop Integration: Direct access from Claude AI
+## ✨ Key Features
 
-🏗️ Architecture
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Multi-Agent System | ✅ | Coordinated AI agents using LangGraph |
+| Market Research | ✅ | Real-time eBay integration with circuit breaker |
+| Player Analysis | ✅ | Performance evaluation from real sports APIs |
+| Trading Strategy | ✅ | Intelligent buy/sell/hold recommendations |
+| MCP Server | ⚠️ | Standardized protocol for tool exposure |
+| Web Interface | ✅ | Interactive Streamlit dashboard |
+| Claude Desktop | ⚠️ | Integration available via MCP |
+| **Unit Tests** | ✅ | 37+ tests with pytest |
+
+## 🏗️ Architecture
+
+```
 ┌─────────────────────────────────────────────────────┐
 │                 USER INTERFACE                      │
 │           Streamlit App / Claude Desktop            │
@@ -34,276 +44,209 @@ Key Features
     ┌──────▼─────┐ ┌─────▼──────┐ ┌────▼─────────┐
     │  Market    │ │  Player    │ │  Trading     │
     │  Research  │ │  Analysis  │ │  Strategy    │
-    │  Agent     │ │  Agent     │ │  Agent       │
+    │  Agent ✓   │ │  Agent     │ │  Agent ✓     │
     └────────────┘ └────────────┘ └──────────────┘
-🚀 Quick Start
-Prerequisites
+           │              │              │
+    ┌──────▼─────┐ ┌─────▼──────┐ ┌────▼─────────┐
+    │  eBay API  │ │ NBA/NHL/   │ │ Configurable │
+    │  + Cache   │ │ MLB/NFL    │ │ Thresholds   │
+    └────────────┘ └────────────┘ └──────────────┘
+```
 
-Python 3.13+
-UV package manager
-eBay Developer Account (optional)
-OpenAI API Key (optional)
+## 🚀 Quick Start
 
-Installation
+### Prerequisites
 
-Clone the repository
+- Python 3.13+
+- UV package manager
+- eBay Developer Account (optional)
+- NBA/NHL/MLB/NFL API keys (optional)
 
-bashgit clone https://github.com/yourusername/sports-card-ai-agent.git
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/sports-card-ai-agent.git
 cd sports-card-ai-agent
 
-Install UV (if not already installed)
-
-powershell# Windows
+# Install UV (if not already installed)
+# Windows
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-Install dependencies
+# Install dependencies
+uv sync
 
-bashuv sync
-
-Configure environment variables
-
-bashcp .env.example .env
+# Configure environment variables
+cp .env.example .env
 # Edit .env with your API keys
+```
 
-Run the application
+### Running the Application
 
-bash# Web interface
+```bash
+# Web interface
 streamlit run app.py
 
-# Or test the multi-agent system
-python test_agents_simple.py
-📁 Project Structure
+# Run tests
+python -m pytest tests/unit/ -v
+
+# Run linting
+ruff check src/ tests/
+ruff format src/ tests/
+```
+
+## 📁 Project Structure
+
+```
 sports-card-ai-agent/
 ├── src/
 │   ├── agents/
-│   │   ├── market_research_agent.py    # Market analysis
+│   │   ├── market_research_agent.py    # ✅ Market analysis + circuit breaker
 │   │   ├── player_analysis_agent.py    # Player performance
-│   │   ├── trading_strategy_agent.py   # Trading signals
+│   │   ├── trading_strategy_agent.py   # ✅ Configurable trading signals
 │   │   └── supervisor_agent.py         # LangGraph orchestration
 │   ├── tools/
-│   │   └── ebay_tool.py                # eBay API integration
+│   │   ├── ebay_tool.py                # eBay API integration
+│   │   ├── nba_stats_tool.py           # NBA API
+│   │   ├── nhl_stats_tool.py           # NHL API
+│   │   ├── mlb_stats_tool.py           # MLB API
+│   │   ├── nfl_stats_tool.py           # NFL API
+│   │   └── soccer_stats_tool.py        # Soccer API
 │   ├── mcp/
 │   │   ├── server.py                   # MCP server
 │   │   └── tools.py                    # MCP tool definitions
 │   ├── models/
 │   │   └── card.py                     # Pydantic data models
 │   └── utils/
-│       └── config.py                   # Configuration management
+│       ├── config.py                   # Configuration management
+│       ├── exceptions.py               # ✅ Custom exceptions
+│       ├── logging_config.py           # ✅ JSON structured logging
+│       └── stats_cache.py              # Cache for API responses
+├── tests/
+│   ├── conftest.py                     # Shared pytest fixtures
+│   └── unit/
+│       ├── agents/
+│       │   ├── test_supervisor_agent.py       # 5 tests
+│       │   ├── test_market_research_agent.py # 7 tests
+│       │   └── test_trading_strategy_agent.py # 15 tests
+│       └── models/
+│           └── test_card.py            # 15 tests
 ├── data/
 │   ├── raw/                            # Raw data storage
 │   └── processed/                      # Processed data
-├── tests/
-│   └── test_*.py                       # Test files
-├── app.py                              # Streamlit web app
-├── run_mcp_server.py                   # MCP server launcher
-├── pyproject.toml                      # Project dependencies
+├── pyproject.toml                      # ✅ Unified dependencies
+├── .pre-commit-config.yaml             # Pre-commit hooks
 └── README.md                           # This file
-🤖 Multi-Agent System
-Market Research Agent
+```
 
-Searches eBay for card listings
-Analyzes price trends and market liquidity
-Compares sold vs active listings
-Provides market insights
+## 🧪 Running Tests
 
-Player Analysis Agent
+```bash
+# Run all unit tests
+python -m pytest tests/unit/ -v
 
-Evaluates player performance
-Assesses career trajectory and trends
-Identifies risk factors (injuries, age, etc.)
-Generates future outlook predictions
+# Run with coverage
+python -m pytest tests/unit/ --cov=src --cov-report=html
 
-Trading Strategy Agent
+# Run specific test file
+python -m pytest tests/unit/agents/test_trading_strategy_agent.py -v
 
-Combines market and player data
-Generates BUY/SELL/HOLD signals
-Calculates entry/exit price targets
-Evaluates risk/reward ratios
-Provides actionable recommendations
+# Run tests matching pattern
+python -m pytest -k "test_generate_strategy" -v
+```
 
-Supervisor Agent
+### Test Coverage
 
-Coordinates workflow between agents
-Manages state and data flow
-Generates consolidated reports
-Uses LangGraph for orchestration
+| Module | Tests | Status |
+|--------|-------|--------|
+| SupervisorAgent | 5 | ✅ Passing |
+| MarketResearchAgent | 7 | ✅ Passing |
+| TradingStrategyAgent | 15 | ✅ Passing |
+| Models (Card, Player) | 15 | ✅ Passing |
+| **Total** | **37+** | ✅ |
 
-🔌 MCP Server
-The Model Context Protocol (MCP) server exposes four main tools:
-Available Tools
+## 🔧 Configuration
 
-search_sports_cards
+### Trading Strategy Thresholds
 
-Search for sports cards on eBay
-Filter by price, sport, and condition
-View sold or active listings
+The trading strategy agent is now configurable:
 
+```python
+from src.agents.trading_strategy_agent import TradingStrategyAgent
 
-analyze_card_investment
+# Create agent with custom thresholds
+agent = TradingStrategyAgent(
+    buy_threshold=85,      # Score for BUY signal
+    hold_threshold=70,    # Score for HOLD signal
+    entry_discount=0.95,  # Entry price discount
+    target_multiplier=1.25, # Target sell multiplier
+    stop_loss_discount=0.85,
+)
 
-Analyze a specific card for investment potential
-Get AI-powered BUY/SELL/HOLD signals
-Receive detailed reasoning and confidence levels
+# Or update dynamically
+agent.set_thresholds(buy_threshold=88)
+```
 
+### Circuit Breaker Settings
 
-get_player_card_recommendations
+```python
+from src.agents.market_research_agent import CircuitBreaker
 
-Get card recommendations for a specific player
-Filter by budget constraints
-Ranked by value score
+# Configure circuit breaker
+breaker = CircuitBreaker(
+    failure_threshold=5,   # Failures before opening
+    recovery_timeout=60.0, # Seconds before retry
+)
+```
 
+## 📊 Error Handling
 
-compare_card_prices
+The system now includes robust error handling:
 
-Compare prices between sold and active listings
-Understand market dynamics
-Identify pricing trends
+```python
+from src.utils.exceptions import (
+    MarketDataError,
+    APITemporarilyUnavailableError,
+    RateLimitExceededError,
+    AuthenticationError,
+    ValidationError,
+    ConfigurationError,
+)
+```
 
+### Logging
 
+Structured JSON logging is now available:
 
-Connecting to Claude Desktop
-
-Create/edit ~/.config/Claude/claude_desktop_config.json:
-
-json{
-  "mcpServers": {
-    "sports-card-agent": {
-      "command": "/path/to/your/.venv/bin/python",
-      "args": ["/path/to/your/run_mcp_server.py"]
-    }
-  }
+```json
+{
+  "timestamp": "2025-02-09T19:00:00Z",
+  "level": "INFO",
+  "logger": "MarketResearchAgent",
+  "message": "Researching market for card: LeBron James 2003 Topps",
+  "context_id": "2025-02-09T19:00:00Z_12345",
+  "search_query": "LeBron James 2003 Topps"
 }
+```
 
-Restart Claude Desktop
-Ask Claude: "What MCP tools do you have available?"
+## 🤝 Contributing
 
-🌐 Web Interface
-The Streamlit app provides three main tabs:
-🔍 eBay Search
+1. Install development dependencies: `uv sync --dev`
+2. Install pre-commit hooks: `pre-commit install`
+3. Run tests: `python -m pytest tests/unit/ -v`
+4. Run linting: `ruff check src/ tests/`
+5. Format code: `ruff format src/ tests/`
 
-Search cards with advanced filters
-View real-time listings with images
-See prices, conditions, and seller info
+## 📝 License
 
-📊 Card Analysis
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Input card details
-Get AI-powered investment analysis
-View interactive price charts
-Receive trading recommendations
+## 🙏 Acknowledgments
 
-📈 Dashboard
-
-Market statistics (coming soon)
-Portfolio tracking (coming soon)
-Historical performance (coming soon)
-
-📊 Data Models
-The system uses Pydantic models for type-safe data handling:
-
-Player: Player information and metadata
-Card: Sports card details and specifications
-PricePoint: Individual price observation
-PriceHistory: Historical price data
-PlayerStats: Performance statistics
-TradingRecommendation: AI-generated recommendations
-
-🧪 Testing
-bash# Test simple agents
-python test_agents_simple.py
-
-# Test MCP tools
-python test_mcp_client.py
-
-# Test eBay integration
-python test_ebay.py
-
-# Run all tests
-pytest tests/
-🛠️ Configuration
-Environment Variables
-Create a .env file with:
-env# OpenAI (for advanced AI features)
-OPENAI_API_KEY=sk-...
-
-# eBay API (for market data)
-EBAY_APP_ID=your_app_id
-EBAY_CERT_ID=your_cert_id
-EBAY_DEV_ID=your_dev_id
-EBAY_TOKEN=your_token
-
-# Database
-DATABASE_URL=sqlite:///./data/sports_cards.db
-
-# Logging
-LOG_LEVEL=INFO
-Supported Sports
-
-🏀 NBA (Basketball)
-🏒 NHL (Hockey)
-⚾ MLB (Baseball)
-
-📈 Example Usage
-Python API
-pythonfrom src.agents.supervisor_agent import SupervisorAgent
-import asyncio
-
-async def analyze_card():
-    supervisor = SupervisorAgent()
-    
-    result = await supervisor.analyze_investment_opportunity(
-        player_name="Connor McDavid",
-        year=2015,
-        manufacturer="Upper Deck",
-        sport="NHL",
-        budget=2000.0
-    )
-    
-    print(f"Signal: {result['recommendation']['signal']}")
-    print(f"Confidence: {result['recommendation']['confidence']}")
-    print(f"Reasoning: {result['reasoning']}")
-
-asyncio.run(analyze_card())
-Claude Desktop
-Analyze a Connor McDavid 2015 Upper Deck rookie card as an investment
-🔮 Future Enhancements
-
- SQLite database for historical tracking
- Real-time player statistics APIs
- Advanced charting and analytics
- Email/SMS alert system
- Portfolio management features
- Machine learning price predictions
- Additional marketplace integrations
- Mobile app
- Docker deployment
- Cloud hosting
-
-🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-Fork the repository
-Create your feature branch (git checkout -b feature/AmazingFeature)
-Commit your changes (git commit -m 'Add some AmazingFeature')
-Push to the branch (git push origin feature/AmazingFeature)
-Open a Pull Request
-
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-🙏 Acknowledgments
-
-LangChain - AI framework
-LangGraph - Multi-agent orchestration
-Anthropic MCP - Model Context Protocol
-Streamlit - Web interface
-UV - Package management
-eBay Developer Program - Market data
-
-📧 Contact
-Your Name - @yourtwitter
-Project Link: https://github.com/yourusername/sports-card-ai-agent
-
-Built with ❤️ using AI and modern Python tools
+- [LangChain](https://python.langchain.com/) for AI orchestration
+- [LangGraph](https://langchain.dev/langgraph/) for agent workflows
+- [eBay API](https://developer.ebay.com/) for market data
+- [Streamlit](https://streamlit.io/) for the web interface

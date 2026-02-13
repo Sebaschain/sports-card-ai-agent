@@ -1,3 +1,10 @@
+# Sportsdata.io y SportMonks (multideporte)
+sportsdataio>=1.0.0  # Cliente no oficial, o requests
+sportmonks>=1.0.0    # Cliente no oficial, o requests
+# APIs deportivas recomendadas
+thesportsdb-api-client>=0.2.0  # Multideporte, info de jugadores y equipos
+api-football>=1.0.0            # Fútbol/soccer, datos en tiempo real
+balldontlie>=1.0.0              # NBA, datos de jugadores y partidos
 streamlit>=1.30.0
 langchain>=0.3.0
 langchain-openai>=0.2.0
@@ -23,6 +30,8 @@ gunicorn>=21.2.0
 mcp>=1.0.0
 streamlit-authenticator>=0.3.0
 bcrypt>=4.1.0
+fake-useragent>=1.5.0
+nest_asyncio>=1.5.0
 
 # Production dependencies
 psycopg2-binary>=2.9.0

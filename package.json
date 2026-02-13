@@ -1,0 +1,41 @@
+{
+  "name": "sports-card-ai-agent",
+  "version": "1.0.0",
+  "description": "An intelligent multi-agent system for analyzing and trading sports cards using AI, built with LangChain, LangGraph, and the Model Context Protocol (MCP).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "python -m pytest tests/unit/ -v",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap add ios",
+    "cap:android": "npx cap add android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:open:android": "npx cap open android",
+    "cap:run:ios": "npx cap run ios",
+    "cap:run:android": "npx cap run android",
+    "cap:build:android:debug": "npx cap sync android && cd android && ./gradlew.bat assembleDebug",
+    "cap:build:android:release": "npx cap sync android && cd android && ./gradlew.bat assembleRelease",
+    "build:all": "npx cap sync && cd android && ./gradlew.bat assembleRelease"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sebaschain/sports-card-ai-agent.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Sebaschain/sports-card-ai-agent/issues"
+  },
+  "homepage": "https://github.com/Sebaschain/sports-card-ai-agent#readme",
+  "dependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/cli": "^5.7.8",
+    "@capacitor/core": "^5.7.8",
+    "@capacitor/ios": "^5.7.8"
+  }
+}
